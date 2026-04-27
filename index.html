@@ -1,0 +1,1015 @@
+html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>PteroAdmin - Pterodactyl Control Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0c15;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        /* ========== LOADER ========== */
+        .loader-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0c15;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(66, 153, 225, 0.2);
+            border-top-color: #4299e1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ========== GLASS MORPHISM ========== */
+        .glass {
+            background: rgba(18, 22, 35, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(66, 153, 225, 0.1);
+        }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100%;
+            background: linear-gradient(180deg, #0f1222 0%, #0a0c15 100%);
+            border-right: 1px solid rgba(66, 153, 225, 0.08);
+            z-index: 100;
+            transition: 0.3s;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #4299e1;
+            border-radius: 4px;
+        }
+
+        .logo-area {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(66, 153, 225, 0.08);
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #4299e1, #667eea);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .logo-badge {
+            font-size: 10px;
+            background: rgba(66, 153, 225, 0.2);
+            padding: 2px 8px;
+            border-radius: 20px;
+            color: #4299e1;
+            margin-top: 4px;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            margin: 4px 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #94a3b8;
+        }
+
+        .nav-item i {
+            width: 22px;
+            font-size: 18px;
+        }
+
+        .nav-item:hover {
+            background: rgba(66, 153, 225, 0.08);
+            color: #e2e8f0;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(66, 153, 225, 0.15), rgba(102, 126, 234, 0.1));
+            color: #4299e1;
+            border-left: 3px solid #4299e1;
+        }
+
+        /* ========== MAIN CONTENT ========== */
+        .main-content {
+            margin-left: 280px;
+            padding: 24px 32px;
+            min-height: 100vh;
+        }
+
+        /* ========== HEADER ========== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* ========== STATS CARDS ========== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: rgba(18, 22, 35, 0.8);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(66, 153, 225, 0.08);
+            transition: 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(66, 153, 225, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .stat-title {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(66, 153, 225, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #4299e1;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            color: #10b981;
+        }
+
+        /* ========== CONFIG PANEL ========== */
+        .config-panel {
+            background: rgba(18, 22, 35, 0.8);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(66, 153, 225, 0.08);
+        }
+
+        .config-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .input-group input {
+            flex: 1;
+            background: #0f1222;
+            border: 1px solid rgba(66, 153, 225, 0.15);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #e2e8f0;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            border: none;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4299e1, #667eea);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid rgba(66, 153, 225, 0.3);
+            color: #4299e1;
+        }
+
+        .btn-outline:hover {
+            background: rgba(66, 153, 225, 0.1);
+        }
+
+        /* ========== TABLE ========== */
+        .table-container {
+            background: rgba(18, 22, 35, 0.6);
+            border-radius: 20px;
+            overflow-x: auto;
+            border: 1px solid rgba(66, 153, 225, 0.08);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(66, 153, 225, 0.05);
+        }
+
+        th {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+        }
+
+        td {
+            font-size: 14px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-running { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+        .status-suspended { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+        .status-offline { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            margin: 0 4px;
+            transition: 0.2s;
+        }
+
+        .action-btn:hover {
+            color: #4299e1;
+        }
+
+        .action-btn.danger:hover {
+            color: #ef4444;
+        }
+
+        /* ========== MODAL ========== */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.2s;
+        }
+
+        .modal.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: #0f1222;
+            border-radius: 24px;
+            padding: 28px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid rgba(66, 153, 225, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            font-size: 20px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: #64748b;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .modal-body input, .modal-body select {
+            width: 100%;
+            background: #0a0c15;
+            border: 1px solid rgba(66, 153, 225, 0.15);
+            border-radius: 12px;
+            padding: 12px;
+            color: #e2e8f0;
+            margin-bottom: 16px;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            .sidebar {
+                left: -280px;
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ========== TOAST NOTIFICATION ========== */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 20px;
+            background: #0f1222;
+            border-radius: 12px;
+            border-left: 3px solid #4299e1;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: 0.3s;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+
+<div class="loader-wrapper" id="loader">
+    <div class="loader"></div>
+</div>
+
+<!-- ========== SIDEBAR ========== -->
+<div class="sidebar" id="sidebar">
+    <div class="logo-area">
+        <div class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-dragon"></i>
+            </div>
+            <div>
+                <div class="logo-text">PteroAdmin</div>
+                <div class="logo-badge">v5.0 PRO</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-item active" data-page="dashboard">
+        <i class="fas fa-tachometer-alt"></i>
+        <span>Dashboard</span>
+    </div>
+    <div class="nav-item" data-page="servers">
+        <i class="fas fa-server"></i>
+        <span>Servers</span>
+    </div>
+    <div class="nav-item" data-page="users">
+        <i class="fas fa-users"></i>
+        <span>Users</span>
+    </div>
+    <div class="nav-item" data-page="nodes">
+        <i class="fas fa-network-wired"></i>
+        <span>Nodes</span>
+    </div>
+    <div class="nav-item" data-page="locations">
+        <i class="fas fa-map-marker-alt"></i>
+        <span>Locations</span>
+    </div>
+    <div class="nav-item" data-page="nests">
+        <i class="fas fa-boxes"></i>
+        <span>Nests & Eggs</span>
+    </div>
+    <div class="nav-item" data-page="backups">
+        <i class="fas fa-database"></i>
+        <span>Backups</span>
+    </div>
+    <div class="nav-item" data-page="schedules">
+        <i class="fas fa-clock"></i>
+        <span>Schedules</span>
+    </div>
+    <div class="nav-item" data-page="activity">
+        <i class="fas fa-history"></i>
+        <span>Activity Log</span>
+    </div>
+    <div class="nav-item" data-page="settings">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+    </div>
+</div>
+
+<!-- ========== MAIN CONTENT ========== -->
+<div class="main-content">
+    <div class="header">
+        <h1 class="page-title" id="pageTitle">Dashboard</h1>
+        <div style="display: flex; gap: 12px;">
+            <button class="btn btn-outline" id="refreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
+            <button class="btn btn-primary" id="toggleSidebar"><i class="fas fa-bars"></i></button>
+        </div>
+    </div>
+
+    <!-- Config Panel -->
+    <div class="config-panel" id="configPanel">
+        <div class="config-title">
+            <i class="fas fa-plug"></i> Pterodactyl API Configuration
+        </div>
+        <div class="input-group">
+            <input type="text" id="panelUrl" placeholder="https://your-panel.com" value="">
+            <input type="text" id="apiKey" placeholder="API Key (Application API Key)" value="">
+            <button class="btn btn-primary" id="connectBtn"><i class="fas fa-link"></i> Connect</button>
+        </div>
+        <div style="margin-top: 12px; font-size: 12px; color: #64748b;">
+            <i class="fas fa-info-circle"></i> Getting API Key: Panel → Admin → API Credentials → Create New
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-title">Total Servers</span>
+                <div class="stat-icon"><i class="fas fa-server"></i></div>
+            </div>
+            <div class="stat-value" id="statServers">--</div>
+            <div class="stat-change"><i class="fas fa-chart-line"></i> Active management</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-title">Total Users</span>
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+            </div>
+            <div class="stat-value" id="statUsers">--</div>
+            <div class="stat-change"><i class="fas fa-user-plus"></i> Registered accounts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-title">Active Nodes</span>
+                <div class="stat-icon"><i class="fas fa-network-wired"></i></div>
+            </div>
+            <div class="stat-value" id="statNodes">--</div>
+            <div class="stat-change"><i class="fas fa-check-circle"></i> Online nodes</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-title">Locations</span>
+                <div class="stat-icon"><i class="fas fa-map-marker-alt"></i></div>
+            </div>
+            <div class="stat-value" id="statLocations">--</div>
+            <div class="stat-change"><i class="fas fa-globe"></i> Datacenter regions</div>
+        </div>
+    </div>
+
+    <!-- Content Area -->
+    <div id="contentArea">
+        <div class="table-container">
+            <table id="dataTable">
+                <thead id="tableHeader"></thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="10" style="text-align: center;">🔌 Connect to Pterodactyl panel first</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">Action</h3>
+            <button class="close-modal" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-primary" id="modalConfirmBtn">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    let config = {
+        panelUrl: '',
+        apiKey: '',
+        isConnected: false
+    };
+
+    let currentPage = 'dashboard';
+    let cacheData = {
+        servers: [],
+        users: [],
+        nodes: [],
+        locations: [],
+        nests: []
+    };
+
+    // Utility functions
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+        toast.style.borderLeftColor = type === 'success' ? '#10b981' : '#ef4444';
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    async function apiCall(endpoint, method = 'GET', body = null) {
+        const url = `${config.panelUrl}/api/application/${endpoint}`;
+        const headers = {
+            'Authorization': `Bearer ${config.apiKey}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        };
+        const options = { method, headers };
+        if (body) options.body = JSON.stringify(body);
+        
+        const response = await fetch(url, options);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.errors?.[0]?.detail || 'API Error');
+        return data;
+    }
+
+    async function testConnection() {
+        try {
+            const data = await apiCall('users?per_page=1');
+            return { success: true, data };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
+
+    async function loadDashboardData() {
+        try {
+            const [servers, users, nodes, locations] = await Promise.all([
+                apiCall('servers?per_page=100'),
+                apiCall('users?per_page=100'),
+                apiCall('nodes?per_page=100'),
+                apiCall('locations?per_page=100')
+            ]);
+            
+            cacheData.servers = servers.data || [];
+            cacheData.users = users.data || [];
+            cacheData.nodes = nodes.data || [];
+            cacheData.locations = locations.data || [];
+            
+            document.getElementById('statServers').innerText = cacheData.servers.length;
+            document.getElementById('statUsers').innerText = cacheData.users.length;
+            document.getElementById('statNodes').innerText = cacheData.nodes.filter(n => n.attributes?.status === 'active').length;
+            document.getElementById('statLocations').innerText = cacheData.locations.length;
+            
+            return true;
+        } catch (error) {
+            showToast('Failed to load dashboard: ' + error.message, 'error');
+            return false;
+        }
+    }
+
+    async function loadServers() {
+        try {
+            const data = await apiCall('servers?per_page=100&include=user,node');
+            cacheData.servers = data.data || [];
+            renderServers();
+        } catch (error) {
+            showToast('Failed to load servers: ' + error.message, 'error');
+        }
+    }
+
+    async function loadUsers() {
+        try {
+            const data = await apiCall('users?per_page=100');
+            cacheData.users = data.data || [];
+            renderUsers();
+        } catch (error) {
+            showToast('Failed to load users: ' + error.message, 'error');
+        }
+    }
+
+    async function loadNodes() {
+        try {
+            const data = await apiCall('nodes?per_page=100');
+            cacheData.nodes = data.data || [];
+            renderNodes();
+        } catch (error) {
+            showToast('Failed to load nodes: ' + error.message, 'error');
+        }
+    }
+
+    async function loadLocations() {
+        try {
+            const data = await apiCall('locations?per_page=100');
+            cacheData.locations = data.data || [];
+            renderLocations();
+        } catch (error) {
+            showToast('Failed to load locations: ' + error.message, 'error');
+        }
+    }
+
+    async function loadNests() {
+        try {
+            const data = await apiCall('nests?per_page=50');
+            cacheData.nests = data.data || [];
+            renderNests();
+        } catch (error) {
+            showToast('Failed to load nests: ' + error.message, 'error');
+        }
+    }
+
+    // Render functions
+    function renderServers() {
+        const headers = ['ID', 'Name', 'Owner', 'Node', 'Status', 'Memory', 'Disk', 'CPU', 'Actions'];
+        const rows = cacheData.servers.map(s => {
+            const att = s.attributes;
+            return [
+                `<code>${att.id}</code>`,
+                att.name,
+                att.user || '-',
+                att.node || '-',
+                `<span class="status-badge ${att.status === 'running' ? 'status-running' : att.suspended === 'suspended' ? 'status-suspended' : 'status-offline'}">${att.status || (att.suspended ? 'suspended' : 'offline')}</span>`,
+                `${Math.round(att.limits?.memory / 1024)} MB`,
+                `${Math.round(att.limits?.disk / 1024)} MB`,
+                `${att.limits?.cpu || 0}%`,
+                `<button class="action-btn" onclick="serverAction('suspend', ${att.id})"><i class="fas fa-pause-circle"></i></button>
+                 <button class="action-btn" onclick="serverAction('unsuspend', ${att.id})"><i class="fas fa-play-circle"></i></button>
+                 <button class="action-btn" onclick="serverAction('delete', ${att.id})"><i class="fas fa-trash"></i></button>
+                 <button class="action-btn" onclick="serverAction('details', ${att.id})"><i class="fas fa-info-circle"></i></button>`
+            ];
+        });
+        renderTable(['ID', 'Name', 'Owner', 'Node', 'Status', 'Memory', 'Disk', 'CPU', 'Actions'], rows);
+    }
+
+    function renderUsers() {
+        const headers = ['ID', 'Username', 'Email', 'Name', 'Admin', 'Created', 'Actions'];
+        const rows = cacheData.users.map(u => {
+            const att = u.attributes;
+            return [
+                `<code>${att.id}</code>`,
+                att.username,
+        });
+        renderTable(['ID', 'Username', 'Email', 'Name', 'Admin', 'Created', 'Actions'], rows);
+    }
+
+    function renderNodes() {
+        const headers = ['ID', 'Name', 'Location', 'Status', 'Memory', 'Disk', 'Servers', 'Actions'];
+        const rows = cacheData.nodes.map(n => {
+            const att = n.attributes;
+            return [
+                `<code>${att.id}</code>`,
+                att.name,
+                att.location_id,
+                `<span class="status-badge ${att.status === 'active' ? 'status-running' : 'status-offline'}">${att.status}</span>`,
+                `${Math.round(att.memory / 1024)} MB`,
+                `${Math.round(att.disk / 1024)} MB`,
+                att.servers_count || 0,
+                `<button class="action-btn" onclick="nodeAction('delete', ${att.id})"><i class="fas fa-trash"></i></button>`
+            ];
+        });
+        renderTable(headers, rows);
+    }
+
+    function renderLocations() {
+        const headers = ['ID', 'Short Code', 'Description', 'Nodes', 'Servers', 'Actions'];
+        const rows = cacheData.locations.map(l => {
+            const att = l.attributes;
+            return [
+                `<code>${att.id}</code>`,
+                att.short,
+                att.long || '-',
+                att.nodes_count || 0,
+                att.servers_count || 0,
+                `<button class="action-btn" onclick="locationAction('delete', ${att.id})"><i class="fas fa-trash"></i></button>`
+            ];
+        });
+        renderTable(headers, rows);
+    }
+
+    function renderNests() {
+        const headers = ['ID', 'Name', 'Description', 'Eggs', 'Author', 'Actions'];
+        const rows = cacheData.nests.map(n => {
+            const att = n.attributes;
+            return [
+                `<code>${att.id}</code>`,
+                att.name,
+                att.description?.substring(0, 50) || '-',
+                att.eggs_count || 0,
+                att.author || 'Pterodactyl',
+                `<button class="action-btn" onclick="nestAction('eggs', ${att.id})"><i class="fas fa-egg"></i></button>`
+            ];
+        });
+        renderTable(headers, rows);
+    }
+
+    function renderTable(headers, rows) {
+        const headerHtml = `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
+        const bodyHtml = rows.length ? rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('') 
+            : '<tr><td colspan="100" style="text-align: center;">No data found</td></tr>';
+        
+        document.getElementById('tableHeader').innerHTML = headerHtml;
+        document.getElementById('tableBody').innerHTML = bodyHtml;
+    }
+
+    function renderDashboard() {
+        renderTable(['Welcome to PteroAdmin v5'], [['Connected to ' + config.panelUrl]]);
+        loadDashboardData();
+    }
+
+    // Action modals
+    let currentAction = null;
+    let currentId = null;
+
+    function serverAction(action, id) {
+        currentAction = action;
+        currentId = id;
+        document.getElementById('modalTitle').innerText = action.toUpperCase() + ' Server #' + id;
+        document.getElementById('modalBody').innerHTML = `<p>Are you sure you want to ${action} this server?</p><p style="font-size:12px;color:#64748b;">This action cannot be undone.</p>`;
+        document.getElementById('modalConfirmBtn').onclick = () => confirmServerAction();
+        document.getElementById('modal').classList.add('active');
+    }
+
+    async function confirmServerAction() {
+        closeModal();
+        try {
+            if (currentAction === 'suspend') await apiCall(`servers/${currentId}/suspend`, 'POST');
+            else if (currentAction === 'unsuspend') await apiCall(`servers/${currentId}/unsuspend`, 'POST');
+            else if (currentAction === 'delete') await apiCall(`servers/${currentId}`, 'DELETE');
+            showToast(`Server ${currentAction} success!`);
+            if (currentPage === 'servers') loadServers();
+            else loadDashboardData();
+        } catch (error) {
+            showToast(`Failed to ${currentAction} server: ` + error.message, 'error');
+        }
+    }
+
+    function nodeAction(action, id) {
+        if (action === 'delete') {
+            currentAction = action;
+            currentId = id;
+            document.getElementById('modalTitle').innerText = 'Delete Node #' + id;
+            document.getElementById('modalBody').innerHTML = `<p>⚠️ WARNING: Deleting a node will also delete all servers on it!</p><p>Are you absolutely sure?</p>`;
+            document.getElementById('modalConfirmBtn').onclick = async () => {
+                closeModal();
+                try {
+                    await apiCall(`nodes/${currentId}`, 'DELETE');
+                    showToast('Node deleted successfully');
+                    if (currentPage === 'nodes') loadNodes();
+                    else loadDashboardData();
+                } catch (error) {
+                    showToast('Failed to delete node: ' + error.message, 'error');
+                }
+            };
+            document.getElementById('modal').classList.add('active');
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('active');
+        currentAction = null;
+        currentId = null;
+    }
+
+    // Page navigation
+    async function changePage(page) {
+        currentPage = page;
+        document.getElementById('pageTitle').innerText = page.charAt(0).toUpperCase() + page.slice(1);
+        
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+            if (item.dataset.page === page) item.classList.add('active');
+        });
+        
+        if (!config.isConnected) {
+            document.getElementById('contentArea').innerHTML = `
+                <div class="table-container">
+                    <table><tbody><tr><td style="text-align:center;">🔌 Please configure your Pterodactyl panel connection first</td></tr></tbody></table>
+                </div>`;
+            return;
+        }
+        
+        document.getElementById('contentArea').innerHTML = `
+            <div class="table-container">
+                <table><thead id="tableHeader"></thead><tbody id="tableBody"><tr><td>Loading...</td></tr></tbody></table>
+            </div>`;
+        
+        switch(page) {
+            case 'dashboard':
+                renderDashboard();
+                break;
+            case 'servers':
+                await loadServers();
+                break;
+            case 'users':
+                await loadUsers();
+                break;
+            case 'nodes':
+                await loadNodes();
+                break;
+            case 'locations':
+                await loadLocations();
+                break;
+            case 'nests':
+                await loadNests();
+                break;
+            case 'backups':
+                renderTable(['Backups coming soon'], [['📦 Backup management feature - displays server backups']]);
+                break;
+            case 'schedules':
+                renderTable(['Schedules coming soon'], [['⏰ Schedule management feature - task automation']]);
+                break;
+            case 'activity':
+                renderTable(['Activity Log coming soon'], [['📜 API activity and event logging']]);
+                break;
+            case 'settings':
+                renderTable(['Settings'], [['⚙️ Additional settings and preferences']]);
+                break;
+        }
+    }
+
+    // Connection handler
+    document.getElementById('connectBtn').onclick = async () => {
+        const panelUrl = document.getElementById('panelUrl').value.trim();
+        const apiKey = document.getElementById('apiKey').value.trim();
+        
+        if (!panelUrl || !apiKey) {
+            showToast('Please fill both Panel URL and API Key', 'error');
+            return;
+        }
+        
+        config.panelUrl = panelUrl.replace(/\/$/, '');
+        config.apiKey = apiKey;
+        
+        showToast('Testing connection...');
+        const result = await testConnection();
+        
+        if (result.success) {
+            config.isConnected = true;
+            showToast('Connection successful! ✅');
+            document.getElementById('configPanel').style.border = '1px solid rgba(16,185,129,0.3)';
+            changePage(currentPage);
+        } else {
+            config.isConnected = false;
+            showToast('Connection failed: ' + result.error, 'error');
+            document.getElementById('configPanel').style.border = '1px solid rgba(239,68,68,0.3)';
+        }
+    };
+
+    document.getElementById('refreshBtn').onclick = () => {
+        if (config.isConnected) changePage(currentPage);
+        else showToast('Not connected to any panel yet', 'error');
+    };
+
+    document.getElementById('toggleSidebar').onclick = () => {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar.style.left === '-280px') sidebar.style.left = '0';
+        else sidebar.style.left = '-280px';
+    };
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.onclick = () => changePage(item.dataset.page);
+    });
+
+    // Load saved config from localStorage
+    const savedUrl = localStorage.getItem('pteroadmin_url');
+    const savedKey = localStorage.getItem('pteroadmin_key');
+    if (savedUrl) document.getElementById('panelUrl').value = savedUrl;
+    if (savedKey) document.getElementById('apiKey').value = savedKey;
+    
+    function saveToLocal() {
+        localStorage.setItem('pteroadmin_url', config.panelUrl);
+        localStorage.setItem('pteroadmin_key', config.apiKey);
+    }
+    
+    setInterval(saveToLocal, 5000);
+    
+    // Hide loader
+    setTimeout(() => {
+        document.getElementById('loader').style.opacity = '0';
+        setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
+    }, 800);
+</script>
+</body>
+</html>
